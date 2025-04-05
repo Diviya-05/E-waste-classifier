@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nearby Scrap Shops</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8fcf8;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 28px;
+      color: #3b9c3f;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .location-input {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .location-input input {
+      padding: 12px;
+      width: 70%;
+      max-width: 400px;
+      border: 2px solid #3b9c3f;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      color: #333;
+    }
+
+    .location-input button {
+      padding: 12px 18px;
+      background: #3b9c3f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #map {
+      height: 450px;
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 25px;
+    }
+
+    .shop-card {
+      background: white;
+      margin: 12px 0;
+      padding: 18px;
+      border-radius: 10px;
+      border-left: 5px solid #3b9c3f;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .shop-name {
+      font-weight: 700;
+      font-size: 1.2em;
+      color: #3b9c3f;
+    }
+
+    .shop-details {
+      font-size: 0.95em;
+      color: #666;
+    }
+
+    .shop-distance {
+      font-size: 0.9em;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .select-btn {
+      padding: 10px 14px;
+      background: #3b9c3f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .select-btn:hover {
+      background: #2e7d32;
+    }
+
+    #calendar-container {
+      margin-top: 20px;
+      display: none;
+      padding: 20px;
+      background: #f5f9f5;
+      border-radius: 10px;
+    }
+
+    #thank-you-message {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: #e8f5e9;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .schedule-btn {
+      padding: 10px 20px;
+      background: #3b9c3f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .schedule-btn:hover {
+      background: #2e7d32;
+    }
+
+    .back-btn {
+      padding: 10px 20px;
+      background: #757575;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .back-btn:hover {
+      background: #616161;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find Nearby Scrap Shops</h1>
+  <div class="container">
+    <div class="location-input">
+      <input type="text" id="locationInput" placeholder="Enter your location (e.g., Kanjirapally, Kottayam)" />
+      <button onclick="searchLocation()">Search</button>
+    </div>
+
+    <div id="map"></div>
+    <ul id="shops-list"></ul>
+
+    <!-- Calendar to schedule pickup -->
+    <div id="calendar-container">
+      <h2 id="selected-shop-name" style="color: #3b9c3f; text-align: center;"></h2>
+      <div id="calendar"></div>
+      <div class="button-container">
+        <button class="schedule-btn" onclick="schedulePickup()">Schedule Pickup</button>
+        <button class="back-btn" onclick="backToShops()">Back to Shops</button>
+      </div>
+    </div>
+
+    <!-- Thank you message -->
+    <div id="thank-you-message">
+      <h2 style="color: #3b9c3f;">Thank You for Choosing Us!</h2>
+      <p>Your pickup has been successfully scheduled with <span id="thank-you-shop-name" style="font-weight: bold;"></span>.</p>
+      <p>We appreciate your commitment to recycling and sustainability.</p>
+      <button class="back-btn" onclick="backToShops()">Back to Shops</button>
+    </div>
+  </div>
+
+  <script>
+    // Get the predicted category from URL or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const predictedCategory = urlParams.get('category') || localStorage.getItem('predictedCategory') || 'Recyclable';
+    localStorage.setItem('predictedCategory', predictedCategory);
+
+    let map, userMarker;
+    let selectedShop = null;
+
+    // List of sample shops based on predicted category
+    const sampleShops = {
+      'Recyclable': [
+        { shop_name: 'Recycle Tech', shop_address: '123 Green St.', latitude: 9.5916, longitude: 76.5222, distance: 1.5, shop_id: 1 },
+        { shop_name: 'EcoScrap', shop_address: '456 Eco Rd.', latitude: 9.5950, longitude: 76.5200, distance: 2.0, shop_id: 2 }
+      ],
+      'Repairable': [
+        { shop_name: 'FixIt Shop', shop_address: '789 Repair Ln.', latitude: 9.5900, longitude: 76.5300, distance: 1.2, shop_id: 3 },
+        { shop_name: 'Rework Electronics', shop_address: '321 Fix St.', latitude: 9.5800, longitude: 76.5350, distance: 3.0, shop_id: 4 }
+      ]
+    };
+
+    window.onload = () => {
+        const storedLat = localStorage.getItem("user_lat");
+        const storedLon = localStorage.getItem("user_lon");
+
+        if (storedLat && storedLon) {
+            initMap(parseFloat(storedLat), parseFloat(storedLon));
+        } else {
+            getUserLocation();
+        }
+    };
+
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    localStorage.setItem("user_lat", lat);
+                    localStorage.setItem("user_lon", lon);
+                    initMap(lat, lon);
+                },
+                () => {
+                    alert("Unable to retrieve your location.");
+                    initMap(9.5916, 76.5222); // Kottayam fallback
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser.");
+            initMap(9.5916, 76.5222); // Kottayam fallback
+        }
+    }
+
+    function initMap(lat, lon) {
+        if (!map) {
+            map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        } else {
+            map.setView([lat, lon], 13);
+        }
+
+        if (userMarker) {
+            userMarker.setLatLng([lat, lon]);
+        } else {
+            userMarker = L.marker([lat, lon]).addTo(map)
+                .bindPopup('Your Location').openPopup();
+        }
+
+        fetchNearbyShops(lat, lon);
+    }
+
+    function searchLocation() {
+        const location = document.getElementById("locationInput").value.trim();
+        if (location === "") {
+            alert("Please enter a location.");
+            return;
+        }
+
+        // Use a geocoding API (like OpenCage Geocoder or Nominatim) to convert address to coordinates
+        alert("Search for: " + location);
+        // Simulate the result for now
+        const lat = 9.5916;
+        const lon = 76.5222;
+        initMap(lat, lon);
+    }
+
+    function fetchNearbyShops(lat, lon) {
+        const shops = sampleShops[predictedCategory] || [];
+
+        if (shops.length > 0) {
+            const shopsList = document.getElementById("shops-list");
+            shopsList.innerHTML = "";
+            shops.forEach(shop => {
+                const listItem = document.createElement("li");
+                listItem.classList.add("shop-card");
+                listItem.innerHTML = `
+                    <div class="shop-name">${shop.shop_name}</div>
+                    <div class="shop-details">${shop.shop_address}</div>
+                    <div class="shop-distance">${shop.distance} km away</div>
+                    <button class="select-btn" onclick="showCalendar('${shop.shop_name}')">Select</button>
+                `;
+                shopsList.appendChild(listItem);
+            });
+        }
+    }
+
+    function showCalendar(shopName) {
+        selectedShop = shopName;
+        document.getElementById("calendar-container").style.display = "block";
+        document.getElementById("selected-shop-name").textContent = shopName;
+        $('#calendar').fullCalendar({
+            selectable: true,
+            events: [],
+            select: function(start, end) {
+                $('#calendar').fullCalendar('unselect');
+                alert("You have selected: " + start.format());
+            }
+        });
+    }
+
+    function schedulePickup() {
+        alert("Pickup Scheduled for " + selectedShop);
+        document.getElementById("calendar-container").style.display = "none";
+        document.getElementById("thank-you-message").style.display = "block";
+        document.getElementById("thank-you-shop-name").textContent = selectedShop;
+    }
+
+    function backToShops() {
+        document.getElementById("calendar-container").style.display = "none";
+        document.getElementById("thank-you-message").style.display = "none";
+        fetchNearbyShops(parseFloat(localStorage.getItem("user_lat")), parseFloat(localStorage.getItem("user_lon")));
+    }
+  </script>
+</body>
+</html>

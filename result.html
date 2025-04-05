@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .result-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .find-shops-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .find-shops-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <h2>Predicted Category:</h2>
+        <h1 style="color:green;" id="predicted-category">{{ label | capitalize }}</h1>
+
+        {% if filename %}
+            <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded Image" width="300">
+        {% endif %}
+
+        <br><br>
+        <form action="{{ url_for('locator') }}" method="post">
+            <input type="hidden" name="label" value="{{ label }}">
+            <button type="submit" class="find-shops-btn">Find Nearby Shops</button>
+        </form>
+    </div>
+
+    <script>
+        // Store the predicted category in localStorage
+        const predictedCategory = "{{ label }}";
+        localStorage.setItem("predictedCategory", predictedCategory);
+
+        // Show alert message
+        alert('Category stored in localStorage: ' + predictedCategory);
+    </script>
+</body>
+</html>

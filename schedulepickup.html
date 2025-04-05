@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedule Pickup</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.css"/>
+
+  <style>
+    /* Add your styles here */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8fcf8;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #3b9c3f;
+      font-size: 28px;
+    }
+
+    .shop-details {
+      margin: 20px 0;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    #calendar {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Schedule Pickup</h1>
+  <div class="shop-details">
+    <p id="shop-info"></p>
+  </div>
+
+  <div id="calendar"></div>
+
+  <script>
+    // Retrieve selected shop details from localStorage
+    const selectedShop = JSON.parse(localStorage.getItem("selectedShop"));
+
+    if (selectedShop) {
+        document.getElementById("shop-info").innerHTML = `
+          <strong>Shop:</strong> ${selectedShop.shop_name} <br>
+          <strong>Address:</strong> ${selectedShop.shop_address}
+        `;
+        
+        $('#calendar').fullCalendar({
+            selectable: true,
+            select: function(startDate, endDate) {
+                const selectedDate = startDate.format('YYYY-MM-DD');
+                alert(`Pickup scheduled for ${selectedShop.shop_name} on ${selectedDate}.`);
+                // You can also save this information in localStorage or send it for further processing
+            }
+        });
+    } else {
+        alert("No shop selected. Please go back to the previous page.");
+    }
+  </script>
+</body>
+</html>
